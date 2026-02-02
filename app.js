@@ -508,9 +508,21 @@
             const percentage = (e.clientX - rect.left) / rect.width;
             elements.playerProgressFill.style.width = `${percentage * 100}%`;
 
-            const duration = parseTimeToSeconds(elements.playerTotalTime.textContent);
+            // 获取音频总时长
+            let duration;
+            if (elements.audioPlayer && !isNaN(elements.audioPlayer.duration)) {
+                duration = elements.audioPlayer.duration;
+            } else {
+                duration = parseTimeToSeconds(elements.playerTotalTime.textContent);
+            }
+
             const currentSeconds = Math.floor(duration * percentage);
             elements.playerCurrentTime.textContent = formatTime(currentSeconds);
+
+            // 跳转到指定时间
+            if (elements.audioPlayer) {
+                elements.audioPlayer.currentTime = currentSeconds;
+            }
         });
 
         elements.playerVolume.addEventListener('input', (e) => {

@@ -5,14 +5,11 @@
         isLoading: true,
         currentMusic: null,
         isPlaying: false,
+        isMuted: false,
         currentGalleryIndex: 0,
         galleryItems: [],
         musicPlaylist: [
-            { id: 1, title: '烈焰燃烧', artist: '迷雾染色体乐队', duration: '3:45' },
-            { id: 2, title: '霓虹狂潮', artist: '迷雾染色体乐队', duration: '4:12' },
-            { id: 3, title: '星辰坠落', artist: '迷雾染色体乐队', duration: '3:58' },
-            { id: 4, title: '暗夜迷途', artist: '迷雾染色体乐队', duration: '4:30' },
-            { id: 5, title: '觉醒时刻', artist: '迷雾染色体乐队', duration: '3:22' }
+            { id: 1, title: '百鬼夜行', artist: '迷雾染色体乐队', duration: '3:45', audioPath: 'music/迷雾染色体 - 百鬼夜行.mp3' }
         ],
         currentTrackIndex: -1
     };
@@ -38,6 +35,7 @@
         elements.playerTrackName = document.getElementById('playerTrackName');
         elements.playerTrackArtist = document.getElementById('playerTrackArtist');
         elements.playerArtwork = document.getElementById('playerArtwork');
+        elements.volumeIcon = document.querySelector('.volume-icon');
         elements.heroParticles = document.getElementById('heroParticles');
         elements.galleryModal = document.getElementById('galleryModal');
         elements.modalClose = document.getElementById('modalClose');
@@ -357,31 +355,51 @@
 
         elements.musicToggleBtn.classList.add('playing');
 
+        // 设置并播放音频
+        if (elements.audioPlayer) {
+            elements.audioPlayer.src = track.audioPath;
+            elements.audioPlayer.play().catch(error => {
+                console.error('播放失败:', error);
+                showNotification('播放失败，请稍后重试');
+            });
+        }
+
         simulatePlaybackProgress();
     }
 
     function simulatePlaybackProgress() {
-        let progress = 0;
-        const duration = parseTimeToSeconds(elements.playerTotalTime.textContent);
-
         function updateProgress() {
-            if (!state.isPlaying) return;
+            if (!elements.audioPlayer || !state.isPlaying) return;
 
-            progress += 0.1;
-            const percentage = Math.min((progress / duration) * 100, 100);
-            elements.playerProgressFill.style.width = `${percentage}%`;
+            const currentTime = elements.audioPlayer.currentTime;
+            const duration = elements.audioPlayer.duration || parseTimeToSeconds(elements.playerTotalTime.textContent);
 
-            const currentSeconds = Math.floor(progress);
-            elements.playerCurrentTime.textContent = formatTime(currentSeconds);
-
-            if (progress < duration) {
-                requestAnimationFrame(updateProgress);
-            } else {
-                nextTrack();
+            if (duration > 0) {
+                const percentage = Math.min((currentTime / duration) * 100, 100);
+                elements.playerProgressFill.style.width = `${percentage}%`;
+                elements.playerCurrentTime.textContent = formatTime(Math.floor(currentTime));
+                
+                // 更新总时间为实际音频时长
+                if (elements.audioPlayer.duration > 0) {
+                    elements.playerTotalTime.textContent = formatTime(Math.floor(elements.audioPlayer.duration));
+                }
             }
         }
 
-        requestAnimationFrame(updateProgress);
+        function handleTrackEnded() {
+            nextTrack();
+        }
+
+        // 移除旧的事件监听器
+        if (elements.audioPlayer) {
+            // 先移除所有可能的监听器
+            elements.audioPlayer.removeEventListener('timeupdate', updateProgress);
+            elements.audioPlayer.removeEventListener('ended', handleTrackEnded);
+            
+            // 添加新的事件监听器
+            elements.audioPlayer.addEventListener('timeupdate', updateProgress);
+            elements.audioPlayer.addEventListener('ended', handleTrackEnded);
+        }
     }
 
     function parseTimeToSeconds(timeStr) {
@@ -421,8 +439,54 @@
         elements.playerPlay.querySelector('.play-icon').style.display = state.isPlaying ? 'none' : 'block';
         elements.playerPlay.querySelector('.pause-icon').style.display = state.isPlaying ? 'block' : 'none';
 
+        // 控制实际的音频播放
+        if (elements.audioPlayer) {
+            if (state.isPlaying) {
+                elements.audioPlayer.play().catch(error => {
+                    console.error('播放失败:', error);
+                    showNotification('播放失败，请稍后重试');
+                });
+            } else {
+                elements.audioPlayer.pause();
+            }
+        }
+
         if (state.isPlaying && state.currentMusic) {
             simulatePlaybackProgress();
+        }
+    }
+
+    function toggleMute() {
+        state.isMuted = !state.isMuted;
+        
+        if (elements.audioPlayer) {
+            elements.audioPlayer.muted = state.isMuted;
+        }
+        
+        updateVolumeIcon();
+    }
+
+    function updateVolumeIcon() {
+        if (!elements.volumeIcon) return;
+        
+        if (state.isMuted) {
+            // 更改图标为静音状态 - 使用更简单、更适合小尺寸的图标
+            elements.volumeIcon.innerHTML = '<path d="M12 4L9.91 6.09 12 8.18M4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.03h2V20h-2v-2.73c-1.38-.31-2.63-.95-3.69-1.81L14.73 12 19 16.27 20.27 15 12 6.73 4.27 14.47 3 13.24 12 4.27 4.27 3z"/>';
+            // 确保 SVG 视口正确设置
+            elements.volumeIcon.setAttribute('viewBox', '0 0 24 24');
+            // 添加样式确保图标正确显示
+            elements.volumeIcon.style.width = '18px';
+            elements.volumeIcon.style.height = '18px';
+            elements.volumeIcon.style.fill = 'currentColor';
+        } else {
+            // 恢复原始图标
+            elements.volumeIcon.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+            // 确保 SVG 视口正确设置
+            elements.volumeIcon.setAttribute('viewBox', '0 0 24 24');
+            // 添加样式确保图标正确显示
+            elements.volumeIcon.style.width = '18px';
+            elements.volumeIcon.style.height = '18px';
+            elements.volumeIcon.style.fill = 'currentColor';
         }
     }
 
@@ -451,7 +515,21 @@
 
         elements.playerVolume.addEventListener('input', (e) => {
             const volume = e.target.value;
+            if (elements.audioPlayer) {
+                elements.audioPlayer.volume = volume / 100;
+                // 如果调整音量时处于静音状态，取消静音
+                if (state.isMuted) {
+                    state.isMuted = false;
+                    elements.audioPlayer.muted = false;
+                    updateVolumeIcon();
+                }
+            }
         });
+
+        // 添加音量图标点击事件，实现静音切换
+        if (elements.volumeIcon) {
+            elements.volumeIcon.addEventListener('click', toggleMute);
+        }
 
         elements.musicToggleBtn.addEventListener('click', () => {
             if (state.currentMusic) {

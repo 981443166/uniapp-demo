@@ -50,12 +50,16 @@
         elements.locationFilter = document.getElementById('locationFilter');
         elements.contactForm = document.getElementById('contactForm');
         elements.notifyBtn = document.getElementById('notifyBtn');
+        elements.elevatorNav = document.getElementById('elevatorNav');
+        elements.elevatorNavLinks = document.querySelectorAll('.elevator-nav-link');
+        elements.elevatorNavList = document.querySelector('.elevator-nav-list');
     }
 
     function init() {
         initializeElements();
         initLoadingScreen();
         initNavigation();
+        initElevatorNav();
         initParallax();
         initHeroParticles();
         initScrollAnimations();
@@ -776,6 +780,245 @@
                 item.classList.add('visible');
             }
         });
+        
+        updateElevatorNavVisibility();
+    }
+
+    // 节流函数
+    function throttle(func, delay) {
+        let lastCall = 0;
+        return function(...args) {
+            const now = Date.now();
+            if (now - lastCall >= delay) {
+                lastCall = now;
+                return func.apply(this, args);
+            }
+        };
+    }
+
+    function initElevatorNav() {
+        if (!elements.elevatorNav) return;
+
+        // 创建高亮色块元素
+        const highlightBlock = document.createElement('div');
+        highlightBlock.className = 'elevator-nav-highlight';
+        elements.elevatorNavList.appendChild(highlightBlock);
+        elements.highlightBlock = highlightBlock;
+
+        // 初始化高亮色块位置
+        updateHighlightBlockPosition();
+
+        // 初始化电梯导航链接点击事件
+        elements.elevatorNavLinks.forEach(link => {
+            link.addEventListener('click', handleElevatorNavClick);
+        });
+
+        // 初始化滚动监听，更新当前位置高亮（使用节流优化）
+        window.addEventListener('scroll', throttle(updateElevatorNavActive, 16)); // 约60fps
+
+        // 初始化导航可见性
+        updateElevatorNavVisibility();
+
+        // 初始化移动设备导航
+        initMobileElevatorNav();
+    }
+
+    function updateHighlightBlockPosition() {
+        if (!elements.highlightBlock || !elements.elevatorNavList) return;
+
+        // 找到当前激活的导航项
+        const activeLink = document.querySelector('.elevator-nav-link.active');
+        if (activeLink) {
+            // 使用getBoundingClientRect获取相对于视口的位置，然后计算相对于父元素的位置
+            const linkRect = activeLink.getBoundingClientRect();
+            const listRect = elements.elevatorNavList.getBoundingClientRect();
+            
+            const left = linkRect.left - listRect.left;
+            const top = linkRect.top - listRect.top;
+            const width = activeLink.offsetWidth;
+            const height = activeLink.offsetHeight;
+            
+            // 设置高亮色块位置和尺寸
+            elements.highlightBlock.style.width = `${width}px`;
+            elements.highlightBlock.style.height = `${height}px`;
+            elements.highlightBlock.style.left = `${left}px`;
+            elements.highlightBlock.style.top = `${top}px`;
+            elements.highlightBlock.style.opacity = '1';
+        } else {
+            elements.highlightBlock.style.opacity = '0';
+        }
+    }
+
+    function handleElevatorNavClick(e) {
+        e.preventDefault();
+        const href = e.currentTarget.getAttribute('href');
+        if (href && href.startsWith('#')) {
+            const target = document.querySelector(href);
+            if (target) {
+                const navHeight = elements.mainNav.offsetHeight;
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    }
+
+    function updateElevatorNavActive() {
+        if (!elements.elevatorNav) return;
+
+        const scrollY = window.scrollY;
+        const navHeight = elements.mainNav.offsetHeight;
+        const sections = [
+            { id: 'hero', element: document.getElementById('hero') },
+            { id: 'about', element: document.getElementById('about') },
+            { id: 'members', element: document.getElementById('members') },
+            { id: 'music', element: document.getElementById('music') },
+            { id: 'shows', element: document.getElementById('shows') },
+            { id: 'gallery', element: document.getElementById('gallery') },
+            { id: 'contact', element: document.getElementById('contact') }
+        ];
+
+        let currentSection = null;
+
+        for (const section of sections) {
+            if (section.element) {
+                const sectionTop = section.element.getBoundingClientRect().top + window.pageYOffset;
+                if (scrollY >= sectionTop - navHeight - 100) {
+                    currentSection = section.id;
+                }
+            }
+        }
+
+        // 更新导航链接高亮状态
+        elements.elevatorNavLinks.forEach(link => {
+            const section = link.dataset.section;
+            if (section === currentSection) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+
+        // 使用requestAnimationFrame优化动画性能
+        if (elements.highlightBlock) {
+            requestAnimationFrame(updateHighlightBlockPosition);
+        }
+
+        // 更新导航可见性
+        updateElevatorNavVisibility();
+    }
+
+    function updateElevatorNavVisibility() {
+        if (!elements.elevatorNav) return;
+
+        const scrollY = window.scrollY;
+        if (scrollY > 300) {
+            elements.elevatorNav.classList.add('visible');
+        } else {
+            elements.elevatorNav.classList.remove('visible');
+        }
+    }
+
+    function initMobileElevatorNav() {
+        // 创建移动设备上的悬浮按钮
+        if (window.innerWidth <= 480) {
+            const mobileNav = document.createElement('div');
+            mobileNav.className = 'elevator-nav-mobile';
+            mobileNav.innerHTML = `
+                <button class="elevator-nav-toggle" id="elevatorNavToggle" aria-label="导航菜单">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </button>
+                <div class="elevator-nav-mobile-menu" id="elevatorNavMobileMenu">
+                    <ul class="elevator-nav-mobile-list">
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#hero" class="elevator-nav-mobile-link" data-section="hero" aria-label="返回顶部">
+                                <span class="nav-icon">⬆</span>
+                                <span class="nav-label">顶部</span>
+                            </a>
+                        </li>
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#about" class="elevator-nav-mobile-link" data-section="about" aria-label="关于我们">
+                                <span class="nav-icon">👤</span>
+                                <span class="nav-label">关于</span>
+                            </a>
+                        </li>
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#members" class="elevator-nav-mobile-link" data-section="members" aria-label="乐队成员">
+                                <span class="nav-icon">🎵</span>
+                                <span class="nav-label">成员</span>
+                            </a>
+                        </li>
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#music" class="elevator-nav-mobile-link" data-section="music" aria-label="音乐作品">
+                                <span class="nav-icon">💿</span>
+                                <span class="nav-label">音乐</span>
+                            </a>
+                        </li>
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#shows" class="elevator-nav-mobile-link" data-section="shows" aria-label="演出日程">
+                                <span class="nav-icon">🎪</span>
+                                <span class="nav-label">演出</span>
+                            </a>
+                        </li>
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#gallery" class="elevator-nav-mobile-link" data-section="gallery" aria-label="精彩图集">
+                                <span class="nav-icon">📷</span>
+                                <span class="nav-label">图集</span>
+                            </a>
+                        </li>
+                        <li class="elevator-nav-mobile-item">
+                            <a href="#contact" class="elevator-nav-mobile-link" data-section="contact" aria-label="联系我们">
+                                <span class="nav-icon">📞</span>
+                                <span class="nav-label">联系</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            `;
+            document.body.appendChild(mobileNav);
+
+            // 初始化移动导航事件
+            const toggleBtn = document.getElementById('elevatorNavToggle');
+            const mobileMenu = document.getElementById('elevatorNavMobileMenu');
+            const mobileLinks = document.querySelectorAll('.elevator-nav-mobile-link');
+
+            if (toggleBtn && mobileMenu) {
+                toggleBtn.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('visible');
+                });
+
+                // 点击链接后关闭菜单
+                mobileLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const href = link.getAttribute('href');
+                        if (href && href.startsWith('#')) {
+                            const target = document.querySelector(href);
+                            if (target) {
+                                const navHeight = elements.mainNav.offsetHeight;
+                                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+                                window.scrollTo({
+                                    top: targetPosition,
+                                    behavior: 'smooth'
+                                });
+                                mobileMenu.classList.remove('visible');
+                            }
+                        }
+                    });
+                });
+
+                // 点击外部关闭菜单
+                document.addEventListener('click', (e) => {
+                    if (!mobileMenu.contains(e.target) && !toggleBtn.contains(e.target)) {
+                        mobileMenu.classList.remove('visible');
+                    }
+                });
+            }
+        }
     }
 
     if (document.readyState === 'loading') {

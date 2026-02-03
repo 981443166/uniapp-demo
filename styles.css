@@ -1738,6 +1738,257 @@ input, select, textarea {
     100% { left: 100%; }
 }
 
+/* 电梯导航样式 */
+.elevator-nav {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 999;
+    transition: all var(--transition-base);
+    opacity: 0;
+    visibility: hidden;
+}
+
+.elevator-nav.visible {
+    opacity: 1;
+    visibility: visible;
+    animation: elevator-nav-fade-in 0.6s ease forwards;
+}
+
+@keyframes elevator-nav-fade-in {
+    0% {
+        opacity: 0;
+        transform: translateY(-50%) translateX(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.elevator-nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(15, 10, 26, 0.9);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--dark-500);
+    padding: 12px;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow-purple);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.elevator-nav-highlight {
+    position: absolute;
+    background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5), 0 0 10px rgba(139, 92, 246, 0.3) inset;
+    opacity: 0;
+    transition: opacity 0.2s ease-out, width 0.2s ease-out, height 0.2s ease-out;
+    z-index: 1;
+}
+
+
+
+.elevator-nav-item {
+    list-style: none;
+}
+
+.elevator-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    color: var(--dark-200);
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    min-width: 70px;
+    z-index: 2;
+}
+
+.elevator-nav-link:hover {
+    color: var(--white);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.5);
+}
+
+.elevator-nav-link.active {
+    color: var(--white);
+}
+
+.elevator-nav-link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+    opacity: 0;
+    z-index: -1;
+}
+
+
+
+
+
+
+
+.nav-icon {
+    font-size: 18px;
+    display: block;
+}
+
+
+
+.elevator-nav-link.active .nav-icon {
+    animation: nav-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes nav-icon-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .elevator-nav {
+        right: 12px;
+    }
+    
+    .elevator-nav-list {
+        padding: 10px;
+        gap: 6px;
+    }
+    
+    .elevator-nav-link {
+        padding: 8px 12px;
+        min-width: 60px;
+    }
+    
+    .nav-label {
+        font-size: 9px;
+    }
+    
+    .nav-icon {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .elevator-nav {
+        display: none;
+    }
+    
+    /* 移动设备上的悬浮按钮 */
+    .elevator-nav-mobile {
+        position: fixed;
+        bottom: 24px;
+        right: 16px;
+        z-index: 999;
+    }
+    
+    .elevator-nav-toggle {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+        color: var(--white);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-lg), var(--shadow-glow-purple);
+        position: relative;
+    }
+    
+    .elevator-nav-toggle svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .elevator-nav-mobile-menu {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        background: rgba(15, 10, 26, 0.95);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--dark-500);
+        padding: 12px;
+        backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-lg);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
+        transition: all var(--transition-base);
+        min-width: 140px;
+    }
+    
+    .elevator-nav-mobile-menu.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .elevator-nav-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .elevator-nav-mobile-item {
+        list-style: none;
+    }
+    
+    .elevator-nav-mobile-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: var(--radius-md);
+        color: var(--dark-200);
+        transition: all var(--transition-fast);
+    }
+    
+    .elevator-nav-mobile-link:hover {
+        color: var(--white);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.3));
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        border: 1px solid rgba(139, 92, 246, 0.5);
+    }
+    
+    .elevator-nav-mobile-link.active {
+        background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+        color: var(--white);
+    }
+    
+    .elevator-nav-mobile-link .nav-icon {
+        font-size: 16px;
+    }
+    
+    .elevator-nav-mobile-link .nav-label {
+        font-size: 12px;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+}
+
 .music-tab:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);

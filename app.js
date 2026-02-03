@@ -53,6 +53,7 @@
         elements.elevatorNav = document.getElementById('elevatorNav');
         elements.elevatorNavLinks = document.querySelectorAll('.elevator-nav-link');
         elements.elevatorNavList = document.querySelector('.elevator-nav-list');
+        elements.backToTopBtn = document.getElementById('backToTop');
     }
 
     function init() {
@@ -60,6 +61,7 @@
         initLoadingScreen();
         initNavigation();
         initElevatorNav();
+        initBackToTop();
         initParallax();
         initHeroParticles();
         initScrollAnimations();
@@ -815,12 +817,55 @@
 
         // 初始化滚动监听，更新当前位置高亮（使用节流优化）
         window.addEventListener('scroll', throttle(updateElevatorNavActive, 16)); // 约60fps
+        
+        // 初始化窗口大小变化监听，更新导航可见性（使用节流优化）
+        window.addEventListener('resize', throttle(updateElevatorNavVisibility, 16)); // 约60fps
 
         // 初始化导航可见性
         updateElevatorNavVisibility();
 
         // 初始化移动设备导航
         initMobileElevatorNav();
+    }
+
+    function initBackToTop() {
+        if (!elements.backToTopBtn) return;
+
+        // 添加点击事件监听器
+        elements.backToTopBtn.addEventListener('click', handleBackToTopClick);
+
+        // 初始化滚动监听，控制按钮显示/隐藏（使用节流优化）
+        window.addEventListener('scroll', throttle(updateBackToTopVisibility, 16)); // 约60fps
+
+        // 初始化窗口大小变化监听，控制按钮显示/隐藏（使用节流优化）
+        window.addEventListener('resize', throttle(updateBackToTopVisibility, 16)); // 约60fps
+
+        // 初始化按钮可见性
+        updateBackToTopVisibility();
+    }
+
+    function handleBackToTopClick() {
+        // 平滑滚动到页面顶部
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    function updateBackToTopVisibility() {
+        if (!elements.backToTopBtn) return;
+
+        const scrollY = window.scrollY;
+        const viewportWidth = window.innerWidth;
+        
+        // 当视口宽度小于700px且滚动距离大于200px时显示按钮
+        if (viewportWidth < 700 && scrollY > 200) {
+            elements.backToTopBtn.classList.add('visible');
+            elements.backToTopBtn.classList.remove('hidden');
+        } else {
+            elements.backToTopBtn.classList.remove('visible');
+            elements.backToTopBtn.classList.add('hidden');
+        }
     }
 
     function updateHighlightBlockPosition() {
@@ -914,7 +959,10 @@
         if (!elements.elevatorNav) return;
 
         const scrollY = window.scrollY;
-        if (scrollY > 300) {
+        const viewportWidth = window.innerWidth;
+        
+        // 当视口宽度大于等于700px且滚动距离大于300时显示导航
+        if (viewportWidth >= 700 && scrollY > 300) {
             elements.elevatorNav.classList.add('visible');
         } else {
             elements.elevatorNav.classList.remove('visible');

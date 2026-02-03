@@ -1792,6 +1792,66 @@ input, select, textarea {
     z-index: 1;
 }
 
+/* 返回顶部按钮样式 */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+    color: var(--white);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5), 0 0 10px rgba(139, 92, 246, 0.3) inset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-out;
+    z-index: 998;
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.back-to-top.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+}
+
+.back-to-top:hover {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-600));
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6), 0 0 12px rgba(139, 92, 246, 0.4) inset;
+    transform: translateY(-2px);
+}
+
+.back-to-top svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* 响应式设计：视口宽度小于700px时显示返回顶部按钮 */
+@media (max-width: 700px) {
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .back-to-top svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
 
 
 .elevator-nav-item {

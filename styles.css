@@ -3743,8 +3743,22 @@ input, select, textarea {
     }
 
     .footer-links {
-        grid-template-columns: 1fr;
-        gap: 32px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .footer-column h4 {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+
+    .footer-column ul {
+        gap: 12px;
+    }
+
+    .footer-column a {
+        font-size: 15px;
+        padding: 10px 0;
     }
 
     .footer-bottom {
@@ -3798,6 +3812,21 @@ input, select, textarea {
 
     .contact-form {
         padding: 24px;
+    }
+
+    .footer-links {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .footer-column h4 {
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+
+    .footer-column a {
+        font-size: 14px;
+        padding: 8px 0;
     }
 }
 
